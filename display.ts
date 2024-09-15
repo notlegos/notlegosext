@@ -3,7 +3,7 @@
 * Functions to PlanetX sensor by ELECFREAKS Co.,Ltd.
 */
 //% color=#EA5532 icon="\uf110" block="Connected" blockId="PlanetX_Connected" 
-//% groups='["LED", "Digital", "Analog", "IIC Port", "OLED", "8*16 Matrix", "7-Seg 4-Dig LED Nixietube"]'
+//% groups='["LED", "Digital", "Analog", "IIC Port", "OLED", "7-Seg 4-Dig LED Nixietube"]'
 namespace Connected {
     ////////////////////////////////TM 1637/////////////////
     let TM1637_CMD1 = 0x40;
@@ -164,41 +164,10 @@ namespace Connected {
         oledcmd(0xAF);  // Set display On
         oledClear();
     }
-    //////////////////////////////////////////////////////////////Matrix
-    let initializedMatrix = false
-    const HT16K33_ADDRESS = 0x70
-    const HT16K33_BLINK_CMD = 0x80
-    const HT16K33_BLINK_DISPLAYON = 0x01
-    const HT16K33_CMD_BRIGHTNESS = 0xE0
-    let matBuf = pins.createBuffer(17)
-    function matrixInit() {
-        i2ccmd(HT16K33_ADDRESS, 0x21);// turn on oscillator
-        i2ccmd(HT16K33_ADDRESS, HT16K33_BLINK_CMD | HT16K33_BLINK_DISPLAYON | (0 << 1));
-        i2ccmd(HT16K33_ADDRESS, HT16K33_CMD_BRIGHTNESS | 0xF);
-    }
-    function i2ccmd(addr: number, value: number) {
-        let buf = pins.createBuffer(1)
-        buf[0] = value
-        pins.i2cWriteBuffer(addr, buf)
-    }
-    function matrixShow() {
-        matBuf[0] = 0x00;
-        pins.i2cWriteBuffer(HT16K33_ADDRESS, matBuf);
-    }
+
     ///////////////////////////////enum
 
-    export enum EmojiList {
-        //% block="😆"
-        Grinning_Squinting_Face,
-        //% block="😐"
-        Neutral_Face,
-        //% block="😞"
-        Sad_Face,
-        //% block="🙂"
-        Slightly_Smiling_Face,
-        //% block="😠"
-        Angry_Face
-    }
+
     export enum NeoPixelColors {
         //% block=red
         Red = 0xFF0000,
@@ -323,206 +292,6 @@ namespace Connected {
     }
     /////////////////////////////User_function//////////////////
 
-    /**
-    * toggle led
-    */
-    //% blockId=LED block="LED %Rjpin toggle to $ledstate || brightness %brightness \\%"
-    //% Rjpin.fieldEditor="gridpicker" Rjpin.fieldOptions.columns=2
-    //% brightness.min=0 brightness.max=100
-    //% ledstate.shadow="toggleOnOff"
-    //% subcategory=Display group="LED" color=#EA5532
-    //% expandableArgumentMode="toggle"
-    export function ledBrightness(Rjpin: DigitalRJPin, ledstate: boolean, brightness: number = 100): void {
-        let pin = AnalogPin.P1
-        switch (Rjpin) {
-            case DigitalRJPin.J1:
-                pin = AnalogPin.P1
-                break;
-            case DigitalRJPin.J2:
-                pin = AnalogPin.P2
-                break;
-            case DigitalRJPin.J3:
-                pin = AnalogPin.P13
-                break;
-            case DigitalRJPin.J4:
-                pin = AnalogPin.P15
-                break;
-            case DigitalRJPin.P0:
-                pin = AnalogPin.P0
-                break;
-            case DigitalRJPin.P1:
-                pin = AnalogPin.P1
-                break;
-            case DigitalRJPin.P2:
-                pin = AnalogPin.P2
-                break;
-            case DigitalRJPin.P3:
-                pin = AnalogPin.P3
-                break;
-            case DigitalRJPin.P4:
-                pin = AnalogPin.P4
-                break;
-            case DigitalRJPin.P4:
-                pin = AnalogPin.P4
-                break;
-            case DigitalRJPin.P5:
-                pin = AnalogPin.P5
-                break;
-            case DigitalRJPin.P6:
-                pin = AnalogPin.P6
-                break;
-            case DigitalRJPin.P7:
-                pin = AnalogPin.P7
-                break;
-            case DigitalRJPin.P8:
-                pin = AnalogPin.P8
-                break;
-            case DigitalRJPin.P9:
-                pin = AnalogPin.P9
-                break;
-            case DigitalRJPin.P10:
-                pin = AnalogPin.P10
-                break;
-            case DigitalRJPin.P11:
-                pin = AnalogPin.P11
-                break;
-            case DigitalRJPin.P12:
-                pin = AnalogPin.P12
-                break;
-            case DigitalRJPin.P13:
-                pin = AnalogPin.P13
-                break;
-            case DigitalRJPin.P14:
-                pin = AnalogPin.P14
-                break;
-            case DigitalRJPin.P15:
-                pin = AnalogPin.P15
-                break;
-            case DigitalRJPin.P16:
-                pin = AnalogPin.P16
-                break;
-        }
-        if (ledstate) {
-            pins.analogSetPeriod(pin, 100)
-            pins.analogWritePin(pin, Math.map(brightness, 0, 100, 0, 1023))
-        }
-        else {
-            pins.analogWritePin(pin, 0)
-            brightness = 0
-        }
-    }
-    //% subcategory=Display group="8*16 Matrix" color=#00B1ED
-    //% blockId= matrix_refresh block="Matrix Refresh" 
-    export function matrixRefresh(): void {
-        if (!initializedMatrix) {
-            matrixInit();
-            initializedMatrix = true;
-        }
-        matrixShow();
-    }
-    //% subcategory=Display group="8*16 Matrix" color=#00B1ED
-    //% blockId= matrix_clear block="Matrix Clear"
-    export function matrixClear(): void {
-        if (!initializedMatrix) {
-            matrixInit();
-            initializedMatrix = true;
-        }
-        for (let i = 0; i < 16; i++) {
-            matBuf[i + 1] = 0;
-        }
-        matrixShow();
-    }
-
-    //% x.min=0 x.max=15
-    //% y.min=0 y.max=7
-    //% blockId= matrix_draw block="Matrix Draw|X %x|Y %y"
-    //% subcategory=Display group="8*16 Matrix" color=#00B1ED
-    export function matrixDraw(x: number, y: number): void {
-        if (!initializedMatrix) {
-            matrixInit();
-            initializedMatrix = true;
-        }
-
-        if (x > 15) {
-            x = 15
-        }
-        if (y > 7) {
-            y = 7
-        }
-        if (x < 0) {
-            x = 0
-        }
-        if (y < 0) {
-            y = 0
-        }
-        x = Math.round(x)
-        y = Math.round(y)
-
-        let idx = y * 2 + Math.idiv(x, 8);
-
-        let tmp = matBuf[idx + 1];
-        tmp |= (1 << (x % 8));
-        matBuf[idx + 1] = tmp;
-
-        matrixShow();
-    }
-    //% block="Matrix show emoji %ID" color=#00B1ED
-    //% subcategory=Display group="8*16 Matrix" 
-    export function matrixEmoji(ID: EmojiList) {
-        matrixClear();
-        let point;
-        switch (ID) {
-            case 0:
-                point = [[2, 0], [13, 0],
-                [3, 1], [12, 1],
-                [4, 2], [11, 2],
-                [3, 3], [12, 3],
-                [2, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [10, 4], [13, 4],
-                [5, 5], [7, 5], [8, 5], [10, 5],
-                [5, 6], [10, 6],
-                [6, 7], [7, 7], [8, 7], [9, 7]
-                ];
-                break;
-            case 1:
-                point = [[2, 1], [3, 1], [13, 1], [12, 1],
-                [2, 2], [3, 2], [13, 2], [12, 2],
-                [2, 3], [3, 3], [13, 3], [12, 3],
-                [5, 5], [6, 5], [7, 5], [8, 5], [9, 5], [10, 5],
-                [5, 6], [6, 6], [7, 6], [8, 6], [9, 6], [10, 6]
-                ];
-                break;
-            case 2:
-                point = [[1, 2], [5, 2], [10, 2], [14, 2],
-                [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [10, 3], [11, 3], [12, 3], [13, 3], [14, 3],
-                [2, 4], [3, 4], [4, 4], [11, 4], [12, 4], [13, 4],
-                [6, 6], [7, 6], [8, 6], [9, 6],
-                [5, 7], [10, 7]
-                ];
-                break;
-            case 3:
-                point = [[2, 1], [3, 1], [13, 1], [12, 1],
-                [2, 2], [3, 2], [13, 2], [12, 2],
-                [2, 3], [3, 3], [13, 3], [12, 3],
-                [5, 5], [10, 5],
-                [6, 6], [7, 6], [8, 6], [9, 6]
-                ];
-                break;
-            case 4:
-                point = [[2, 0], [13, 0],
-                [3, 1], [12, 1],
-                [3, 2], [4, 2], [11, 2], [12, 2],
-                [3, 3], [4, 3], [11, 3], [12, 3],
-                [6, 6], [7, 6], [8, 6], [9, 6],
-                [5, 7], [10, 7]
-                ];
-                break;
-        }
-        let index_max = point.length
-        for (let index = 0; index < index_max; index++) {
-            matrixDraw(point[index][0], point[index][1])
-        }
-        matrixRefresh();
-    }
     //% line.min=1 line.max=8 line.defl=1
     //% text.defl="Hello,ELECFREAKS"
     //% block="OLED show line %line|text %text"

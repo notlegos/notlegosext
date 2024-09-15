@@ -13,7 +13,6 @@
         "displaySendBuffer.asm",
         "display.ts",
         "planetxbasic.ts",
-        "nezha.ts",
         "notlegos.ts"
     ],
     "testFiles": [
@@ -26,5 +25,5 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "blocksprj"
+    "preferredEditor": "tsprj"
 }
